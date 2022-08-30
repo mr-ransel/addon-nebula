@@ -1,0 +1,23 @@
+#!/command/with-contenv bashio
+# ==============================================================================
+# Home Assistant Add-on: Nebula
+# Runs Nebula
+# ==============================================================================
+#declare node_name
+declare nebula_root_dir
+#declare node_config_dir
+
+nebula_root_dir='/ssl/nebula'
+#node_config_dir='/ssl/nebula/nodes'
+
+s6-svc -O /run/service/nebula
+
+bashio::log.info "Starting Nebula..."
+
+# Get node name
+#if bashio::config.has_value 'node_name'; then
+#    node_name=$(bashio::config 'node_name')
+#fi
+
+# Run Nebula
+exec nebula -config ${nebula_root_dir}

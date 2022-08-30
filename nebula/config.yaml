@@ -1,0 +1,27 @@
+name: Nebula
+version: dev
+slug: nebula
+description: HomeAssistant Addon for slackhq/nebula
+url: https://github.com/mr-ransel/addon-nebula
+init: false
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+ports:
+  4242/udp: 4242
+ports_description:
+  4242/udp: "Nebula: This is the port used for encrypted traffic"
+hassio_api: false
+privileged:
+  - NET_ADMIN
+devices:
+  - /dev/net/tun
+map:
+  - ssl:rw
+options:
+  node_name: homeassistant
+schema:
+  node_name: str
