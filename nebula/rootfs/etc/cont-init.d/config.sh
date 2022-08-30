@@ -50,12 +50,13 @@ fi
   # This could be either a lighthouse or regular node
 # Second, allow this to stand itself up as a lighthouse, (or signing regular node I guess)
   # Requires User to config as either a signer, or non-signer (can still be either rlighthouse)
-  # Generates Nebula
+  # Generates Nebula certs and config from basic UI decisions (probably a template + yq to mutate values)
+  # if config.yaml (vs generated_config.yaml) exists, use it instead of any generated values
 
 
 # Ideal state:
-# Can be either a signing or non-signing node, as either a lighthouse or non-lighthouse
-# In all signer-configurations can handle exporting certs to other network nodes
+# Can be either a signing or non-signing node, as either a lighthouse or non-lighthouse (leveraging dynamic DNS)
+# In all signer-configurations can handle exporting certs to other network nodes, as well as incrementing IP management
 
 # Configuration modes:
   # Lighthouse, or no
