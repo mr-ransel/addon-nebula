@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This is an approximate draft of what the cert generation and signing process will look like. See the temporary hosts.txt format at the bottom to use.
+
 set -o xtrace
 
 # Made up values for testing, later these will come from Hass config
