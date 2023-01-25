@@ -36,6 +36,13 @@ if ! bashio::fs.file_exists "${node_config_dir}/${node_name}/host.crt" && \
     bashio::exit.nok "Missing a host.crt, host.key, or ca.crt in this nodes data folder"
 fi
 
+# Set the iptables rules necessary for traffic forwarding between other devices on the network
+nebula_interface_name=nebula1
+host_interface_name=eth0
+iptables -A FORWARD -i "${nebula_interface_name}" -j ACCEPT
+iptables -A FORWARD -o "${nebula_interface_name}" -j ACCEPT
+iptables -t nat -A POSTROUTING -o "${host_interface_name}" -j MASQUERADE
+
 ## Things we'll need
 # Nebula config yaml
 # Host Key
@@ -52,7 +59,6 @@ fi
   # Requires User to config as either a signer, or non-signer (can still be either rlighthouse)
   # Generates Nebula certs and config from basic UI decisions (probably a template + yq to mutate values)
   # if config.yaml (vs generated_config.yaml) exists, use it instead of any generated values
-
 
 # Ideal state:
 # Can be either a signing or non-signing node, as either a lighthouse or non-lighthouse (leveraging dynamic DNS)

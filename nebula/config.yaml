@@ -13,7 +13,7 @@ arch:
 ports:
   4242/udp: 4242
 ports_description:
-  4242/udp: "Nebula: This is the port used for encrypted traffic"
+  4242/udp: "Nebula: This is the port used for encrypted traffic from inside the docker container"
 hassio_api: false
 privileged:
   - NET_ADMIN
