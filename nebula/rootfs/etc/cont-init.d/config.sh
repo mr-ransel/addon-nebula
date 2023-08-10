@@ -16,6 +16,8 @@ declare node_config_dir
 declare nebula_interface_name
 declare host_interface_name
 
+### Setup basic directories and boilerplate checks
+
 nebula_root_dir='/ssl/nebula'
 node_config_dir="${nebula_root_dir}/nodes"
 
@@ -34,24 +36,24 @@ if ! bashio::fs.directory_exists "${node_config_dir}/${node_name}"; then
         bashio::exit.nok "Could not create node-data storage folder for this node! (${node_config_dir}/${node_name})"
 fi
 
-if ! bashio::fs.file_exists "${node_config_dir}/${node_name}/host.crt" && \
-    ! bashio::fs.file_exists "${node_config_dir}/${node_name}/host.key" && \
-    ! bashio::fs.file_exists "${node_config_dir}/ca.crt"; then
-    bashio::exit.nok "Missing a host.crt, host.key, or ca.crt in this nodes data folder"
+# TODO: Before this check is where we need to generate certs
+if ! bashio::fs.file_exists "${node_config_dir}/${node_name}/${node_name}.crt" && \
+    ! bashio::fs.file_exists "${node_config_dir}/${node_name}/${node_name}.key" && \
+    ! bashio::fs.file_exists "${node_config_dir}/ca/ca.crt"; then
+    bashio::exit.nok "Missing a host.crt, host.key, or ca.crt in ${node_config_dir}"
 fi
 
-### Generate generated_config.yaml here
+### Generate generated_nebula_config.yaml here
 
-# Put the template in place
-cp "/etc/generated_config.tmpl.yaml" "${nebula_root_dir}/generated_config.yaml" || 
-  bashio::exit.nok "Couldn't place nebula config template! (${nebula_root_dir}/generated_config.yaml)"
-
-generated_config="${node_config_dir}/${node_name}/generated_config.yaml"
+# Put the base template in place
+generated_config="${node_config_dir}/${node_name}/generated_nebula_config.yaml"
+cp "/etc/generated_config.tmpl.yaml" "${generated_config}" ||
+  bashio::exit.nok "Couldn't place nebula config template! (${generated_config})"
 
 # Write out paths for CA, Certificate and key for this node
-yq --inplace '.pki.ca = "${node_config_dir}/ca.crt"' ${generated_config}
-yq --inplace '.pki.cert = "${node_config_dir}/${node_name}/host.crt"' ${generated_config}
-yq --inplace '.pki.key = "${node_config_dir}/${node_name}/host.key"' ${generated_config}
+yq --inplace '.pki.ca = "${node_config_dir}/ca/ca.crt"' ${generated_config}
+yq --inplace '.pki.cert = "${node_config_dir}/${node_name}/${node_name}.crt"' ${generated_config}
+yq --inplace '.pki.key = "${node_config_dir}/${node_name}/${node_name}.key"' ${generated_config}
 
 # Set other_lighthouses list as static_hosts
 lighthouse_idx=-1 # This is a trick so if there are none the first one is popluated in the next clause
@@ -109,6 +111,7 @@ else
     done
 fi
 
+# TODO: Need to make sure nebula accepts this field being empty (if not provided in config)
 # Set each of preferred_ranges
 for idx in $(bashio::config 'preferred_route_cidrs|keys'); do
     cidr=$(bashio::config "preferred_route_cidrs[${idx}]")
@@ -117,7 +120,7 @@ done
 
 # Render any embedded template variables
 node_config_dir="${node_config_dir}" node_name="${node_name}" \
-  yq --inplace '(.. | select(tag == "!!str")) |= envsubst'
+  yq --inplace '(.. | select(tag == "!!str")) |= envsubst' ${generated_config}
 
 if bashio::fs.file_exists "${nebula_root_dir}/config.yaml"; then
     bashio::log.warning "Custom nebula config.yaml detected, ignoring generated nebula configuration!"

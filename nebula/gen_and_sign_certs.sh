@@ -5,9 +5,9 @@
 set -o xtrace
 
 # Made up values for testing, later these will come from Hass config
-ca_name="RanselNet"
+ca_name="TestNet"
 ca_duration="26280h"
-ip_range="10.99.99"
+ip_range="192.168.99"
 subnet_mask="24"
 
 # When you re-run, if it already exists it will just refuse to overwrite and move on

@@ -48,4 +48,4 @@ schema:
     - overlay_ip: "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)$)" # Must be an IP address
       public_addr_and_port: "match(^[-0-9a-z\\.]+:\\d{1,5}$)" # Must be an IP/hostname:port
   preferred_route_cidrs:
-    - "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)/\\d{1,2}$)" # Must be an IP address and CIDR range
+    - "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)/\\d{1,2}$)?" # Must be an IP address and CIDR range
