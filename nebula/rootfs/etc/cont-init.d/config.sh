@@ -4,15 +4,19 @@
 # Creates the interface configuration
 # ==============================================================================
 
-declare node_name
+
 declare nebula_root_dir
+declare node_config_dir
+declare node_name
+declare -i idx
+declare nebula_network
+declare ip_base
+declare subnet_mask
 declare generated_config
 declare -i lighthouse_idx
 declare overlay_ip
-declare -i idx
 declare addr
 declare cidr
-declare node_config_dir
 declare nebula_interface_name
 declare host_interface_name
 
@@ -26,17 +30,62 @@ if ! bashio::fs.directory_exists ${node_config_dir}; then
         bashio::exit.nok "Could not create nebula node storage folder! (${node_config_dir}) "
 fi
 
-if ! bashio::config.has_value 'addon_node_name'; then
+if ! bashio::config.has_value 'hass_node_name'; then
     bashio::exit.nok 'You need to set a name for this node in the addon config.'
 fi
-node_name=$(bashio::config 'addon_node_name')
+node_name=$(bashio::config 'hass_node_name')
 
 if ! bashio::fs.directory_exists "${node_config_dir}/${node_name}"; then
     mkdir -p "${node_config_dir}/${node_name}" ||
         bashio::exit.nok "Could not create node-data storage folder for this node! (${node_config_dir}/${node_name})"
 fi
 
-# TODO: Before this check is where we need to generate certs
+### Generate Certs from node_list
+
+# See if we are acting as the cert authority
+if bashio::config.hass_is_cert_authority.true; then
+    pushd ${node_config_dir}
+
+    # Build hosts.txt
+    for idx in $(bashio::config 'node_list|keys'); do
+        if bashio::config.has_value "node_list[${idx}].overlay_ip"; then
+            overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
+        else
+            overlay_ip=""
+        fi
+
+        if bashio::config.has_value "node_list[${idx}].groups"; then
+            nebula_groups=$(bashio::config "node_list[${idx}].groups")
+        else
+            nebula_groups=""
+        fi
+
+        if bashio::config.has_value "node_list[${idx}].extra_args"; then
+            extra_args=$(bashio::config "node_list[${idx}].extra_args")
+        else
+            extra_args=""
+        fi
+
+        # TODO: Add support and config for the public_key field
+        
+        echo "$(bashio::config "node_list[${idx}].name");${overlay_ip} ${nebula_groups} ${extra_args}" >> hosts.txt
+    done
+
+    nebula_network=$(bashio::config 'nebula_network_cidr')
+    # TODO: This currently limits cidr ranges to beginning a subnet with X.X.X.1 - Might need real IP math one day
+    ip_base=$(echo ${nebula_network} | cut -f1-3 --delimeter=.)
+    subnet_mask=$(echo ${nebula_network} | cut -f2 --delimeter=/)
+    
+    ca_name=HassNet ca_duration=$(bashio::config 'cert_expiry_time') \
+      ip_range=${ip_base} subnet_mask=${subnet_mask} \
+      gen_and_sign_certs.sh
+
+    popd
+else
+    bashio::log.warning \
+      "Add-on is not acting as a certificate authority. User must generate and place certificates in ${node_config_dir}/${node_name}/"
+fi
+
 if ! bashio::fs.file_exists "${node_config_dir}/${node_name}/${node_name}.crt" && \
     ! bashio::fs.file_exists "${node_config_dir}/${node_name}/${node_name}.key" && \
     ! bashio::fs.file_exists "${node_config_dir}/ca/ca.crt"; then
@@ -68,22 +117,22 @@ for lighthouse_idx in $(bashio::config 'other_lighthouses|keys'); do
       ${generated_config}
     
     # Set the list of `.lighthouse.hosts` while we're iterating over this
-    if bashio::config.false 'addon_is_lighthouse'; then
+    if bashio::config.false 'hass_is_lighthouse'; then
         index=${lighthouse_idx} overlay_ip=${overlay_ip} yq --inplace '.lighthouse.hosts[env(index)] = strenv(overlay_ip)' ${generated_config}
     fi
 done
-# TODO: This may or may not break if addon_is_lighthouse is true, and there are no other_lighthouses
+# TODO: This may or may not break if hass_is_lighthouse is true, and there are no other_lighthouses
 # (Probably fine, but it's because static_host_map is uninitialized and also not an array)
 
 # If a lighthouse, add self to static_host_map
 # TODO: This assumes this node is item 0 in the node_list AND has a defined overlay_ip
 # would need another way to get generated IPs and to pick out a specific node name from the list
-if bashio::config.true 'addon_is_lighthouse'; then
+if bashio::config.true 'hass_is_lighthouse'; then
     for idx in $(bashio::config 'node_list|keys'); do
         overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
-        # TODO: Make this support more than the just the first advertise_addrs item
-        # (loop over advertise_addrs and assign them separately)
-        public_addr=$(bashio::config "advertise_addrs[0]")
+        # TODO: Make this support more than the just the first hass_advertise_addrs item
+        # (loop over hass_advertise_addrs and assign them separately)
+        public_addr=$(bashio::config "hass_advertise_addrs[0]")
         # Note, this exploits incrementing the index of the previous loop - ${lightouse}
         index=$((${lighthouse_idx}+1)) overlay_ip=${overlay_ip} public_addr=${public_addr} \
           yq --inplace '.static_host_map.[strenv(overlay_ip)][env(index) ] = strenv(public_addr) | .static_host_map.[strenv(overlay_ip)][env(index)] style="double"' \
@@ -93,7 +142,7 @@ if bashio::config.true 'addon_is_lighthouse'; then
 fi
 
 # Set lighthouse settings
-if bashio::config.true 'addon_is_lighthouse'; then
+if bashio::config.true 'hass_is_lighthouse'; then
     yq --inplace '.lighthouse.am_lighthouse = true' ${generated_config}
 
     # Delete advertise_addrs
@@ -102,9 +151,9 @@ else
     # Note, the list of "other_lighthouses" is added to .lighthoues.hosts above
     yq --inplace '.lighthouse.am_lighthouse = false' ${generated_config}
 
-    # Set each of advertise_addrs
-    for idx in $(bashio::config 'advertise_addrs|keys'); do
-        addr=$(bashio::config "advertise_addrs[${idx}]")
+    # Set each of hass_advertise_addrs
+    for idx in $(bashio::config 'hass_advertise_addrs|keys'); do
+        addr=$(bashio::config "hass_advertise_addrs[${idx}]")
         index=${idx} addr=${addr} \
           yq --inplace '.lighthouse.advertise_addrs[env(index)] = strenv(addr) | .lighthouse.advertise_addrs[env(index)] style="double"' \
           ${generated_config}
