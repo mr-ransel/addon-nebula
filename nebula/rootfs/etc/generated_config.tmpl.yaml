@@ -24,7 +24,7 @@ static_host_map:
 lighthouse:
   # am_lighthouse is used to enable lighthouse functionality for a node. This should ONLY be true on nodes
   # you have configured to be lighthouses in your network
-  am_lighthouse: false
+  am_lighthouse: false # FILL IN
   # serve_dns optionally starts a dns listener that responds to various queries and can even be
   # delegated to for resolution
   #serve_dns: false
@@ -38,7 +38,7 @@ lighthouse:
   # hosts is a list of lighthouse hosts this node should report to and query from
   # IMPORTANT: THIS SHOULD BE EMPTY ON LIGHTHOUSE NODES
   # IMPORTANT2: THIS SHOULD BE LIGHTHOUSES' NEBULA IPs, NOT LIGHTHOUSES' REAL ROUTABLE IPs
-  hosts:
+  hosts: []
     # "FILL IN"
 
   # remote_allow_list allows you to control ip ranges that this node will
@@ -145,7 +145,7 @@ punchy:
 # NOTE: the previous option "local_range" only allowed definition of a single range
 # and has been deprecated for "preferred_ranges"
 #preferred_ranges: ["172.16.0.0/24"]
-preferred_ranges:
+preferred_ranges: []
   # FILL IN
 
 # sshd can expose informational and administrative functions via ssh this is a

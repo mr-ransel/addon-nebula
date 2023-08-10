@@ -24,16 +24,28 @@ map:
 options:
   addon_node_name: homeassistant
   addon_is_lighthouse: false
-  addon_advertise_addrs: []
+  addon_is_cert_authority: false
+  nebula_network_cidr: null
+  advertise_addrs: []
+  node_list:
+    - name: homeassistant
   other_lighthouses: []
   preferred_route_cidrs: []
 schema:
   addon_node_name: str
   addon_is_lighthouse: bool
+  addon_is_cert_authority: bool
+  nebula_network_cidr: "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)/\\d{1,2}$)" # Must be an IP address and CIDR range
   advertise_addrs:
     - "match(^[-0-9a-z\\.]+:\\d{1,5}$)" # Must be a IP/domain:port
+  node_list:
+    - name: str
+      groups: "str?"
+      overlay_ip: "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)$)?"
+      public_key: str?
+      extra_args: str?
   other_lighthouses:
-  - overlay_ip: "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)$)" # Must be an IP address
-    public_addr_and_port: "match(^[-0-9a-z\\.]+:\\d{1,5}$)" # Must be an IP/hostname:port
+    - overlay_ip: "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)$)" # Must be an IP address
+      public_addr_and_port: "match(^[-0-9a-z\\.]+:\\d{1,5}$)" # Must be an IP/hostname:port
   preferred_route_cidrs:
     - "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)/\\d{1,2}$)" # Must be an IP address and CIDR range
