@@ -1,0 +1,53 @@
+pki:
+  ca: /ssl/nebula/nodes/homeassistant/ca.crt
+  cert: /ssl/nebula/nodes/homeassistant/host.crt
+  key: /ssl/nebula/nodes/homeassistant/host.key
+static_host_map:
+  "10.11.11.1": ["100.42.68.207:4242"]
+lighthouse:
+  am_lighthouse: false
+  interval: 60
+  hosts:
+    - "10.11.11.1"
+  local_allow_list:
+    interfaces:
+      "docker.*": false
+      hassio: false
+  advertise_addrs:
+    - patricia.anselmail.com:31553
+listen:
+  host: 0.0.0.0
+  port: 4242
+punchy:
+  punch: true
+  respond: true
+  delay: 1s
+preferred_ranges: ["192.168.11.1/24"]
+relay:
+  am_relay: false
+  use_relays: true
+tun:
+  disabled: false
+  dev: nebula1
+  drop_local_broadcast: false
+  drop_multicast: false
+  tx_queue: 500
+  mtu: 1300
+  routes:
+  unsafe_routes:
+logging:
+  level: info
+  format: text
+firewall:
+  conntrack:
+    tcp_timeout: 12m
+    udp_timeout: 3m
+    default_timeout: 10m
+  outbound:
+    - port: any
+      proto: any
+      host: any
+  inbound:
+    - port: any
+      proto: any
+      host: any

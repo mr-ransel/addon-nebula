@@ -1,0 +1,52 @@
+stripped_down_config_sample:
+  hass_node_name: homeassistant # What will this node be called?
+  hass_is_lighthouse: false # Will this node be a publicly-accessible lighthouse for nodes to phone-home and find each other?
+  hass_is_cert_authority: true # Will this node be generating and signing node certificates or is that handled elsewhere?
+  nebula_network_cidr: "100.100.0.0/22" # The CIDR range used for your secure overlay network
+  hass_advertise_addrs:
+    - "myhouse.dyndns.com:4242" # Any publicly available/static addresses/IPs and ports for this node
+  node_list:
+    - name: homeassistant
+    - name: laptop # name of the node
+      groups: personal,computer # Optional, any groups you want to use
+      overlay_ip: 100.100.100.57 # Optional, Overlay IP address (default: assigned in order of this list)
+      public_key: "ahdsaflasdfjlksadf" # Optional, If the keypair was generated locally, the public key to use for certificate signing
+      extra_args: "-subnets 192.168.1.1/24" # Optional, any advanced nebula-cert arguments to pass when signing this certificate
+    - name: phone
+    - name: raspberry-pi
+  other_lighthouses:
+  - overlay_ip: "100.100.100.100" # Overlay network IP of other lighthouse
+    public_addr_and_port: "mycloudvm.example.com:4242" # Public IP/hostname and port of other lighthouse
+  cert_expiry_time: "26280h" # Optional, how long before certs expire (default 3 years)
+  preferred_route_cidrs:
+    - "192.168.1.1/24" # Optional, These routes will be preferred over others by other nodes to keep traffic on efficient routes
+
+
+the_most_stripped_down_config:
+  hass_node_name: homeassistant
+  hass_is_lighthouse: true
+  hass_is_cert_authority: true
+  nebula_network_cidr: "100.100.0.0/22"
+  hass_advertise_addrs:
+    - "myhouse.dyndns.com:4242"
+  node_list:
+    - name: homeassistant
+      overlay_ip: 100.100.0.1/22
+    - name: phone
+    - name: laptop
+
+TODO, for my reference:
+.pki.ca = "/ssl/nebula/nodes/{node_name}/ca.crt"
+.pki.cert = "/ssl/nebula/nodes/{node_name}/host.crt"
+.pki.key = "/ssl/nebula/nodes/{node_name}/host.key"
+.static_host_map.["{lighthouse_overlay_ip}"][0] = "{lh_public_ip/domain}:{lh_port}" | .static_host_map.["{lighthouse_overlay_ip}"][0] style="double"
+# ^ repeat for number of lighthouses
+.lighthouse.am_lighthouse = {boolean}
+.lighthouse.hosts[0] = "{lighthouse_overlay_ip}" | .lighthouse.hosts[0] style="double"
+# ^ leave empty on lighthouse nodes
+# ^ repeat for number of lighthouses
+.lighthouse.advertise_addrs[0] = "{public/dyndns address}:{public port}"
+# repeat for number public addresses
+.preferred_ranges[0] = "{lan_ip_range_cidr}" | .preferred_ranges[0] style="double"
+# repeat for any LAN CIDR ranges
+# relay: Figure out how to handle these, and if we want to add them as they could be confusing
