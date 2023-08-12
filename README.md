@@ -8,7 +8,6 @@ Still in development, but as far as my use cases it appears fully functional. Af
 - Go to the addon store, and install it as a local addon
 - Once installed, the configuration tab has options to set up your nebula overlay network (see Configuration below)
 
-
 ## Run modes:
 ### Quickstart - UI configured Lighthouse and Cert Authority
 If you've never used nebula and don't have detailed custom configuration needs, this is where to start. 
@@ -44,7 +43,12 @@ Sorry, bad news. I haven't gotten to totally documenting this yet, but you can l
 
 I also haven't implemented the public_key field, so if you want to use that for cert generation, you'll need to put the public key in the `nodes` folder and reference it in the `extra_args` field instead.
 
+## Required Config changes to forward traffic to non-nebula hosts:
+- In your client(s) that you want to use to access HA, you'll need to add a `unsafe_route` clause to your nebula config that includes the IPs you want to access on your network using Nebula. (for example: `192.168.1.1/24` for the whole network, or `192.168.1.25/32` for _just_ home assistant)
+- For the certificate you sign to be run by the home-assistant addon, you'll need to grant it that same subnet access, using the `nebula-cert` argument like `-subnets 192.168.1.1/24`, using `extra_args`
 
 ## Note:
-- This is largely a ripoff of frenck's wireguard add-on as a starting point then I built out an equivalent behavior for the nebula basics. 
-- Later I'll come back and set it up as a lighthouse, cert signer automation and convert the basic config.yaml into UI configurable stuff in HA
+- The base for this was initially frenck's wireguard add-on as a starting point then I built out an equivalent behavior for the nebula functionality.
+
+## Handy Tooling
+- There's a bash script included in `rootfs/usr/bin` that will generate and sign all the certificates you need for your nodes, as well as handle (very) rudimentary IP management on your overlay network. It reads a `hosts.txt` file and spits out folders with `.crt`,`.key` files and QR codes for easy consumption, without overwriting anything you already had in place.
