@@ -27,12 +27,15 @@ the_most_stripped_down_config:
   hass_is_lighthouse: true
   hass_is_cert_authority: true
   nebula_network_cidr: "100.100.0.0/22"
+  hass_advertise_addrs:
+    - "myhouse.dyndns.com:4242"
   node_list:
     - name: homeassistant
+      overlay_ip: 100.100.0.1/22
     - name: phone
     - name: laptop
 
-Edits to be made by yq:
+TODO, for my reference:
 .pki.ca = "/ssl/nebula/nodes/{node_name}/ca.crt"
 .pki.cert = "/ssl/nebula/nodes/{node_name}/host.crt"
 .pki.key = "/ssl/nebula/nodes/{node_name}/host.key"

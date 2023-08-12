@@ -23,10 +23,12 @@ map:
   - ssl:rw
 options:
   hass_node_name: homeassistant
-  hass_is_lighthouse: false
-  hass_is_cert_authority: false
-  nebula_network_cidr: null
-  hass_advertise_addrs: []
+  hass_is_lighthouse: true
+  hass_is_cert_authority: true
+  nebula_network_cidr: "192.168.111.222.1/24"
+  hass_advertise_addrs:
+    - public-dynamicdns-or-static-ip.myhouse.com:4242
+    - 192.168.1.10:4242
   node_list:
     - name: homeassistant
   other_lighthouses: []
@@ -48,6 +50,6 @@ schema:
   other_lighthouses:
     - overlay_ip: "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)$)" # Must be an IP address
       public_addr_and_port: "match(^[-0-9a-z\\.]+:\\d{1,5}$)" # Must be an IP/hostname:port
-  cert_expiry_time: "match(^\d+h$)"
+  cert_expiry_time: "match(^\\d+h$)"
   preferred_route_cidrs:
     - "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)/\\d{1,2}$)?" # Must be an IP address and CIDR range
