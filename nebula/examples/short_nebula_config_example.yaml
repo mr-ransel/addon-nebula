@@ -3,18 +3,18 @@ pki:
   cert: /ssl/nebula/nodes/homeassistant/host.crt
   key: /ssl/nebula/nodes/homeassistant/host.key
 static_host_map:
-  "10.11.11.1": ["100.42.68.207:4242"]
+  "10.1.1.1": ["100.200.100.1:4242"]
 lighthouse:
   am_lighthouse: false
   interval: 60
   hosts:
-    - "10.11.11.1"
+    - "10.1.1.1"
   local_allow_list:
     interfaces:
       "docker.*": false
       hassio: false
   advertise_addrs:
-    - patricia.anselmail.com:31553
+    - cloudvm.example.com:4242
 listen:
   host: 0.0.0.0
   port: 4242
@@ -22,7 +22,7 @@ punchy:
   punch: true
   respond: true
   delay: 1s
-preferred_ranges: ["192.168.11.1/24"]
+preferred_ranges: ["192.168.1.1/24"]
 relay:
   am_relay: false
   use_relays: true
