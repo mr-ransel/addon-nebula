@@ -114,7 +114,6 @@ yq --inplace '.pki.cert = "${node_config_dir}/${node_name}/${node_name}.crt"' ${
 yq --inplace '.pki.key = "${node_config_dir}/${node_name}/${node_name}.key"' ${generated_config}
 
 # Set other_lighthouses list as static_hosts
-lighthouse_idx=-1 # This is a trick so if there are none the first one is popluated later by the first node_list item
 for lighthouse_idx in $(bashio::config 'other_lighthouses|keys'); do
     overlay_ip=$(bashio::config "other_lighthouses[${lighthouse_idx}].overlay_ip")
     addr=$(bashio::config "other_lighthouses[${lighthouse_idx}].public_addr_and_port")
@@ -141,10 +140,9 @@ if bashio::config.true 'hass_is_lighthouse'; then
     for idx in $(bashio::config 'node_list|keys'); do
         overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
         # TODO: Make this support more than the just the first hass_advertise_addrs item
-        # (loop over hass_advertise_addrs and assign them separately)
+        # (loop over hass_advertise_addrs and assign them separately by index)
         public_addr=$(bashio::config "hass_advertise_addrs[0]")
-        # Note, this exploits incrementing the index of the previous loop's final ${lightouse_idx}
-        index=$((${lighthouse_idx}+1)) overlay_ip=${overlay_ip} public_addr=${public_addr} \
+        index=0 overlay_ip=${overlay_ip} public_addr=${public_addr} \
           yq --inplace '.static_host_map.[strenv(overlay_ip)][env(index) ] = strenv(public_addr) | .static_host_map.[strenv(overlay_ip)][env(index)] style="double"' \
           ${generated_config}
         break;
