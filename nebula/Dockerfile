@@ -14,6 +14,7 @@ RUN \
         go=1.20.7-r0 \
         iptables=1.8.9-r2 \
         yq=4.33.3-r2 \
+        bind-tools=9.18.16-r0 \
 #        libqrencode=4.1.1-r0 \
 #        openresolv=3.12.0-r0 \
 #        wireguard-tools=1.0.20210914-r0 \
