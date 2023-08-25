@@ -22,6 +22,7 @@ declare addr
 declare cidr
 declare nebula_interface_name
 declare host_interface_name
+declare homeassistant_ip
 
 ### Setup basic directories and boilerplate checks
 
@@ -80,6 +81,8 @@ if bashio::config.true 'hass_is_cert_authority'; then
         echo "$(bashio::config "node_list[${idx}].name");${overlay_ip} ${nebula_groups} ${extra_args}" >> hosts.txt
     done
 
+    bashio::log 
+    bashio::log "Generating certs..."
     nebula_network=$(bashio::config 'nebula_network_cidr')
     # TODO: This currently limits cidr ranges to beginning a subnet with X.X.X.1 - Might need real IP math one day
     ip_base=$(echo ${nebula_network} | cut -f1-3 -d.)
@@ -184,18 +187,30 @@ else
     bashio::log.notice "Custom nebula config.yaml detected, ignoring generated nebula configuration!"
 fi
 
+
+bashio::log "Setting up IP Forwarding and iptables rules..."
 ### Setup the routing rules for Nebula traffic
 # Set the iptables rules necessary for traffic forwarding between other devices on the network
 # TODO: Make this optionally configurable
 nebula_interface_name=nebula1
 host_interface_name=eth0
-# Accept traffic on the nebula interface not destined for my IPs
-iptables -A FORWARD -i "${nebula_interface_name}" -j ACCEPT
-# Accept traffic exiting the nebula interface not destined for my IPs
-iptables -A FORWARD -o "${nebula_interface_name}" -j ACCEPT
-# After routing has finished
-iptables -t nat -A POSTROUTING -o "${host_interface_name}" -j MASQUERADE
-
 homeassistant_ip=$(dig +short homeassistant)
+
+if [[ $(</proc/sys/net/ipv4/ip_forward) -eq 0 ]]; then
+    bashio::log.warning
+    bashio::log.warning "IP forwarding is disabled on the host system!"
+    bashio::log.warning "You can still use Nebula to access homeassistant"
+    bashio::log.warning "however, you cannot access nodes on your home"
+    bashio::log.warning "network that aren't running nebula themselves"
+    bashio::log.warning
+else
+    # Accept traffic on the nebula interface not destined for this node's IPs
+    iptables -A FORWARD -i "${nebula_interface_name}" -j ACCEPT
+    # Accept traffic exiting the nebula interface not destined for this node's IPs
+    iptables -A FORWARD -o "${nebula_interface_name}" -j ACCEPT
+    # After routing has finished, nat+masquerade the packets to their destinations on the non-nebula network
+    iptables -t nat -A POSTROUTING -o "${host_interface_name}" -j MASQUERADE
+fi
+
 # We want this host to receive traffic coming to the nebula interface and route it to the host IP instead so you can access hass services using the nebula IP
 iptables -A PREROUTING -i "${nebula_interface_name}" -j DNAT --to-destination ${homeassistant_ip}
