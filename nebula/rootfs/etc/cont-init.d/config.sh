@@ -189,6 +189,13 @@ fi
 # TODO: Make this optionally configurable
 nebula_interface_name=nebula1
 host_interface_name=eth0
+# Accept traffic on the nebula interface not destined for my IPs
 iptables -A FORWARD -i "${nebula_interface_name}" -j ACCEPT
+# Accept traffic exiting the nebula interface not destined for my IPs
 iptables -A FORWARD -o "${nebula_interface_name}" -j ACCEPT
+# After routing has finished
 iptables -t nat -A POSTROUTING -o "${host_interface_name}" -j MASQUERADE
+
+homeassistant_ip=$(dig +short homeassistant)
+# We want this host to receive traffic coming to the nebula interface and route it to the host IP instead so you can access hass services using the nebula IP
+iptables -A PREROUTING -i "${nebula_interface_name}" -j DNAT --to-destination ${homeassistant_ip}
