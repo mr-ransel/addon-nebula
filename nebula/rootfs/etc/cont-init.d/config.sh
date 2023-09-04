@@ -4,7 +4,6 @@
 # Creates the interface configuration
 # ==============================================================================
 
-
 declare nebula_root_dir
 declare node_config_dir
 declare node_name
@@ -17,12 +16,12 @@ declare ip_base
 declare subnet_mask
 declare generated_config
 declare -i lighthouse_idx
-declare overlay_ip
+declare hass_overlay_ip
 declare addr
 declare cidr
 declare nebula_interface_name
 declare host_interface_name
-declare homeassistant_ip
+declare hass_underlay_ip
 
 ### Setup basic directories and boilerplate checks
 
@@ -141,11 +140,11 @@ if bashio::config.true 'hass_is_lighthouse'; then
     # TODO: This assumes this node is item 0 in the node_list AND has a defined overlay_ip
     # Need to grab the generated IP from the nebula cert for this node instead
     for idx in $(bashio::config 'node_list|keys'); do
-        overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
+        hass_overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
         # TODO: Make this support more than the just the first hass_advertise_addrs item
         # (loop over hass_advertise_addrs and assign them separately by index)
         public_addr=$(bashio::config "hass_advertise_addrs[0]")
-        index=0 overlay_ip=${overlay_ip} public_addr=${public_addr} \
+        index=0 overlay_ip=${hass_overlay_ip} public_addr=${public_addr} \
           yq --inplace '.static_host_map.[strenv(overlay_ip)][env(index) ] = strenv(public_addr) | .static_host_map.[strenv(overlay_ip)][env(index)] style="double"' \
           ${generated_config}
         break;
@@ -194,7 +193,7 @@ bashio::log "Setting up IP Forwarding and iptables rules..."
 # TODO: Make this optionally configurable
 nebula_interface_name=nebula1
 host_interface_name=eth0
-homeassistant_ip=$(dig +short homeassistant)
+hass_underlay_ip=$(dig +short homeassistant)
 
 if [[ $(</proc/sys/net/ipv4/ip_forward) -eq 0 ]]; then
     bashio::log.warning
@@ -205,12 +204,16 @@ if [[ $(</proc/sys/net/ipv4/ip_forward) -eq 0 ]]; then
     bashio::log.warning
 else
     # Accept traffic on the nebula interface not destined for this node's IPs
-    iptables -A FORWARD -i "${nebula_interface_name}" -j ACCEPT
+    iptables --append FORWARD --in-interface "${nebula_interface_name}" --jump ACCEPT
     # Accept traffic exiting the nebula interface not destined for this node's IPs
-    iptables -A FORWARD -o "${nebula_interface_name}" -j ACCEPT
-    # After routing has finished, nat+masquerade the packets to their destinations on the non-nebula network
-    iptables -t nat -A POSTROUTING -o "${host_interface_name}" -j MASQUERADE
+    iptables --append FORWARD --out-interface "${nebula_interface_name}" --jump ACCEPT
+    # After routing, nat+masquerade the packets to their destinations on the non-nebula network
+    iptables --table nat --append POSTROUTING \
+      --out-interface "${host_interface_name}" \
+      --jump MASQUERADE
 fi
 
-# We want this host to receive traffic coming to the nebula interface and route it to the host IP instead so you can access hass services using the nebula IP
-iptables -A PREROUTING -i "${nebula_interface_name}" -j DNAT --to-destination ${homeassistant_ip}
+# This host should route traffic coming to the nebula interface+IP to the host IP to reach hass services via the nebula IP
+iptables --append PREROUTING \
+  --in-interface "${nebula_interface_name}" --destination ${hass_overlay_ip} \
+  --jump DNAT --to-destination ${hass_underlay_ip}
