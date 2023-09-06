@@ -214,6 +214,6 @@ else
 fi
 
 # This host should route traffic coming to the nebula interface+IP to the host IP to reach hass services via the nebula IP
-iptables --append PREROUTING \
+iptables --table nat --append PREROUTING \
   --in-interface "${nebula_interface_name}" --destination ${hass_overlay_ip} \
   --jump DNAT --to-destination ${hass_underlay_ip}
