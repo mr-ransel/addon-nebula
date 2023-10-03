@@ -4,7 +4,6 @@
 # Creates the interface configuration
 # ==============================================================================
 
-
 declare nebula_root_dir
 declare node_config_dir
 declare node_name
@@ -17,11 +16,12 @@ declare ip_base
 declare subnet_mask
 declare generated_config
 declare -i lighthouse_idx
-declare overlay_ip
+declare hass_overlay_ip
 declare addr
 declare cidr
 declare nebula_interface_name
 declare host_interface_name
+declare hass_underlay_ip
 
 ### Setup basic directories and boilerplate checks
 
@@ -80,6 +80,8 @@ if bashio::config.true 'hass_is_cert_authority'; then
         echo "$(bashio::config "node_list[${idx}].name");${overlay_ip} ${nebula_groups} ${extra_args}" >> hosts.txt
     done
 
+    bashio::log 
+    bashio::log "Generating certs..."
     nebula_network=$(bashio::config 'nebula_network_cidr')
     # TODO: This currently limits cidr ranges to beginning a subnet with X.X.X.1 - Might need real IP math one day
     ip_base=$(echo ${nebula_network} | cut -f1-3 -d.)
@@ -138,11 +140,11 @@ if bashio::config.true 'hass_is_lighthouse'; then
     # TODO: This assumes this node is item 0 in the node_list AND has a defined overlay_ip
     # Need to grab the generated IP from the nebula cert for this node instead
     for idx in $(bashio::config 'node_list|keys'); do
-        overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
+        hass_overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
         # TODO: Make this support more than the just the first hass_advertise_addrs item
         # (loop over hass_advertise_addrs and assign them separately by index)
         public_addr=$(bashio::config "hass_advertise_addrs[0]")
-        index=0 overlay_ip=${overlay_ip} public_addr=${public_addr} \
+        index=0 overlay_ip=${hass_overlay_ip} public_addr=${public_addr} \
           yq --inplace '.static_host_map.[strenv(overlay_ip)][env(index) ] = strenv(public_addr) | .static_host_map.[strenv(overlay_ip)][env(index)] style="double"' \
           ${generated_config}
         break;
@@ -184,11 +186,40 @@ else
     bashio::log.notice "Custom nebula config.yaml detected, ignoring generated nebula configuration!"
 fi
 
+
+bashio::log "Setting up IP Forwarding and iptables rules..."
 ### Setup the routing rules for Nebula traffic
 # Set the iptables rules necessary for traffic forwarding between other devices on the network
 # TODO: Make this optionally configurable
 nebula_interface_name=nebula1
 host_interface_name=eth0
-iptables -A FORWARD -i "${nebula_interface_name}" -j ACCEPT
-iptables -A FORWARD -o "${nebula_interface_name}" -j ACCEPT
-iptables -t nat -A POSTROUTING -o "${host_interface_name}" -j MASQUERADE
+hass_underlay_ip=$(dig +short homeassistant)
+
+if [[ $(</proc/sys/net/ipv4/ip_forward) -eq 0 ]]; then
+    bashio::log.warning
+    bashio::log.warning "IP forwarding is disabled on the host system!"
+    bashio::log.warning "You can still use Nebula to access homeassistant"
+    bashio::log.warning "however, you cannot access nodes on your home"
+    bashio::log.warning "network that aren't running nebula themselves"
+    bashio::log.warning
+else
+    # Accept traffic on the nebula interface not destined for this node's IPs
+    iptables --append FORWARD --in-interface "${nebula_interface_name}" --jump ACCEPT
+    # Accept traffic exiting the nebula interface not destined for this node's IPs
+    iptables --append FORWARD --out-interface "${nebula_interface_name}" --jump ACCEPT
+    # After routing, nat+masquerade the packets to their destinations on the non-nebula network
+    iptables --table nat --append POSTROUTING \
+      --out-interface "${host_interface_name}" \
+      --jump MASQUERADE
+fi
+
+# TODO: This is annoying syntax, need a better way to look this up
+for idx in $(bashio::config 'node_list|keys'); do
+    hass_overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
+    break
+done
+
+# This host should route traffic coming to the nebula interface+IP to the host IP to reach hass services via the nebula IP
+iptables --table nat --append PREROUTING \
+  --in-interface "${nebula_interface_name}" --destination ${hass_overlay_ip} \
+  --jump DNAT --to-destination ${hass_underlay_ip}
