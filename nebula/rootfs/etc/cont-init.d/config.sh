@@ -213,6 +213,12 @@ else
       --jump MASQUERADE
 fi
 
+# TODO: This is annoying syntax, need a better way to look this up
+for idx in $(bashio::config 'node_list|keys'); do
+    hass_overlay_ip=$(bashio::config "node_list[${idx}].overlay_ip")
+    break
+done
+
 # This host should route traffic coming to the nebula interface+IP to the host IP to reach hass services via the nebula IP
 iptables --table nat --append PREROUTING \
   --in-interface "${nebula_interface_name}" --destination ${hass_overlay_ip} \
