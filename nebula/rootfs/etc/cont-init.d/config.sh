@@ -192,7 +192,7 @@ bashio::log "Setting up IP Forwarding and iptables rules..."
 # Set the iptables rules necessary for traffic forwarding between other devices on the network
 # TODO: Make this optionally configurable
 nebula_interface_name=nebula1
-host_interface_name=eth0
+host_interface_name=enp3s0
 hass_underlay_ip=$(dig +short homeassistant)
 
 if [[ $(</proc/sys/net/ipv4/ip_forward) -eq 0 ]]; then
