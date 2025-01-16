@@ -1,5 +1,5 @@
 name: Nebula
-version: dev
+version: 1.1.0
 slug: nebula
 description: HomeAssistant addon for slackhq/nebula
 url: https://github.com/mr-ransel/addon-nebula
@@ -53,3 +53,5 @@ schema:
   cert_expiry_time: "match(^\\d+h$)"
   preferred_route_cidrs:
     - "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)/\\d{1,2}$)?" # Must be an IP address and CIDR range
+  nebula_interface_name: str?
+  host_interface_name: str?
