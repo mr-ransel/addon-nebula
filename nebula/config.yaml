@@ -1,5 +1,5 @@
 name: Nebula
-version: dev
+version: 1.1.0
 slug: nebula
 description: HomeAssistant addon for slackhq/nebula
 url: https://github.com/mr-ransel/addon-nebula
