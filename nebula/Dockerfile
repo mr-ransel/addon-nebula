@@ -7,8 +7,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Build Nebula
 RUN \
     apk add --no-cache --virtual .build-dependencies \
-        build-base=0.5-r3 \
-        git=2.40.1-r0 \
+        build-base \
+        git \
     \
     && apk add --no-cache \
         go \
