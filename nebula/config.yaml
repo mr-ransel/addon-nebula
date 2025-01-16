@@ -34,6 +34,8 @@ options:
   other_lighthouses: []
   cert_expiry_time: "26280h"
   preferred_route_cidrs: []
+  nebula_interface_name: nebula1
+  host_interface_name: eth0
 schema:
   hass_node_name: str
   hass_is_lighthouse: bool
@@ -53,3 +55,5 @@ schema:
   cert_expiry_time: "match(^\\d+h$)"
   preferred_route_cidrs:
     - "match(^(([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)\\.){3}([1-9]?\\d|1\\d\\d|25[0-5]|2[0-4]\\d)/\\d{1,2}$)?" # Must be an IP address and CIDR range
+  nebula_interface_name: str
+  host_interface_name: str
