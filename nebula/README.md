@@ -16,6 +16,10 @@ Follow these steps to get the add-on installed on your system:
 5. Find the "Nebula" add-on and click it.
 6. Click on the "INSTALL" button.
 
+Alternatively, use the following button to open the addon and click INSTALL
+
+[![Open this add-on in your Home Assistant instance.][addon-badge]][addon]
+
 ## How to use
 
 The add-on has a couple of options available. For more detailed instructions
@@ -27,3 +31,5 @@ see below. The basic thing to get the add-on running would be:
 
 This could definitely be improved, but it should be enough to get you started [here](/DOCS.md)
 
+[addon-badge]: https://my.home-assistant.io/badges/supervisor_addon.svg
+[addon]: https://my.home-assistant.io/redirect/supervisor_addon/?addon=a0d7b954_logviewer&repository_url=https%3A%2F%2Fgithub.com%2Fhassio-addons%2Frepository
