@@ -29,7 +29,7 @@ see below. The basic thing to get the add-on running would be:
 
 ## Documentation
 
-This could definitely be improved, but it should be enough to get you started [here](/DOCS.md)
+This could definitely be improved, but it should be enough to get you started [here](/nebula/DOCS.md)
 
 [addon-badge]: https://my.home-assistant.io/badges/supervisor_addon.svg
 [addon]: https://my.home-assistant.io/redirect/supervisor_addon/?addon=ac13a23d_nebula&repository_url=https%3A%2F%2Fgithub.com%2Fmr-ransel%2Faddon-nebula
