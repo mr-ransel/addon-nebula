@@ -19,7 +19,7 @@ RUN \
 #        openresolv=3.12.0-r0 \
 #        wireguard-tools=1.0.20210914-r0 \
     \
-    && git clone --branch "v1.7.2" --depth=1 \
+    && git clone --branch "v1.10.3" --depth=1 \
         "https://github.com/slackhq/nebula.git" /tmp/nebula \
     \
     && cd /tmp/nebula \
