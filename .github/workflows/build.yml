@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    name: Build addon (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            build_from: ghcr.io/hassio-addons/base/amd64:20.1.1
+            platform: linux/amd64
+          # arm64 and armv7 builds via QEMU emulation are very slow when
+          # compiling Nebula from source (~30-45 min each). They will be
+          # re-enabled once the Dockerfile switches to downloading pre-built
+          # Nebula binaries instead of compiling from source.
+          # - arch: aarch64
+          #   build_from: ghcr.io/hassio-addons/base/aarch64:20.1.1
+          #   platform: linux/arm64
+          # - arch: armv7
+          #   build_from: ghcr.io/hassio-addons/base/armv7:20.1.1
+          #   platform: linux/arm/v7
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./nebula
+          file: ./nebula/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: false
+          # BUILD_FROM must stay in sync with the matching arch entry in build.yaml
+          build-args: |
+            BUILD_FROM=${{ matrix.build_from }}
