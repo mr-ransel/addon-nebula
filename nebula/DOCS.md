@@ -44,3 +44,15 @@ I also haven't implemented the public_key field, so if you want to use that for 
 
 ## Handy Tooling
 - There's a bash script included in `rootfs/usr/bin` that will generate and sign all the certificates you need for your nodes, as well as handle (very) rudimentary IP management on your overlay network. It reads a `hosts.txt` file and spits out folders with `.crt`,`.key` files and QR codes for easy consumption, without overwriting anything you already had in place.
+
+## Troubleshooting
+
+### Certificate version compatibility (v1 vs v2)
+
+Nebula v1.10.0 introduced a new **v2 ASN.1-based certificate format**. This addon runs Nebula v1.10.x, which defaults to generating v2 certificates for new installs.
+
+**If you are upgrading an existing install:** nothing changes. The cert generation script only creates a CA if one doesn't already exist — your existing v1 certificates stay in place and continue to work fine.
+
+**If you are doing a fresh install** with this addon acting as CA, it will generate a v2 CA and v2 node certificates. All other nodes on your Nebula network must be running **Nebula v1.9.5 or later** to participate (v1.9.5 added graceful handling of v2 certs; full support requires v1.10.0+). If you have older nodes that can't be upgraded, you can force v1 certificate generation by passing `-version 1` via `extra_args` in your node configuration, or by generating your CA externally with `nebula-cert ca -version 1` and managing it yourself.
+
+**If you manage your own certificates externally** (i.e. `hass_is_cert_authority: false`): the cert format is entirely up to you and this addon is unaffected.
