@@ -20,9 +20,6 @@ jobs:
           - arch: aarch64
             build_from: ghcr.io/hassio-addons/base/aarch64:20.1.1
             platform: linux/arm64
-          - arch: armv7
-            build_from: ghcr.io/hassio-addons/base/armv7:20.1.1
-            platform: linux/arm/v7
 
     steps:
       - name: Checkout
