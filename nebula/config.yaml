@@ -8,9 +8,6 @@ host_network: true
 arch:
   - aarch64
   - amd64
-  - armhf
-  - armv7
-  - i386
 ports:
   4242/udp: 4242
 ports_description:
